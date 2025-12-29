@@ -55,6 +55,34 @@ exports.getCommentsForPost = async (req, res, next) => {
   }
 };
 
+// Update comment (author only)
+exports.updateComment = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const comment = await Comment.findById(id);
+
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    if (String(comment.author) !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    comment.content = content.trim();
+    await comment.save();
+
+    res.json({
+      success: true,
+      message: "Comment updated successfully",
+      data: comment,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Delete comment (blog author only)
 exports.deleteComment = async (req, res, next) => {
   try {

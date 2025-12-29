@@ -7,6 +7,7 @@ const {
   respondToFriendRequest,
   getFriends,
   removeFriend,
+  getPendingRequests,
 } = require("../services/friend.service");
 const { authenticate } = require("../middlewares/auth.middleware");
 const {authenticateOptional} = require("../middlewares/authOptional.middleware")
@@ -36,6 +37,9 @@ router.post(
 
 // friends list
 router.get("/list", getFriends);
+
+// pending requests
+router.get("/requests", getPendingRequests);
 
 // remove friend
 router.delete("/remove/:friendId", removeFriend);

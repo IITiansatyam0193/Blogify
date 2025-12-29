@@ -39,11 +39,17 @@ export interface FriendRequest {
   status: 'pending' | 'accepted' | 'rejected';
 }
 
+export interface Friend {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 export interface Profile {
   _id: string;
   name: string;
   email?: string;
-  friends?: string[];
+  friends?: Friend[];
   incomingRequests?: FriendRequest[];
   outgoingRequests?: FriendRequest[];
 }

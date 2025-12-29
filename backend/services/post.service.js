@@ -203,15 +203,6 @@ exports.getPostById = async (req, res, next) => {
       });
     }
 
-    // INCREMENT VIEW + TRACK ANALYTICS - Story 7. [file:1]
-    if (post.status === "published") {
-      post.views += 1;
-      await post.save();
-
-      // Log to daily analytics (fire and forget)
-      req.app.locals.trackView(post._id, viewerId).catch(console.error);
-    }
-
     res.json({ success: true, data: post });
   } catch (err) {
     next(err);

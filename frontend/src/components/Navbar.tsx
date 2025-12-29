@@ -1,47 +1,102 @@
 import React from 'react';
-import { Navbar as BSNavbar, Nav, Container, Button } from 'react-bootstrap';
+import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
 
   if (loading) {
-    return null; // Don't render until auth is ready
+    return null;
   }
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <BSNavbar bg="dark" variant="dark" expand="lg" sticky="top">
-      <Container>
-        <BSNavbar.Brand href="/">Blogify</BSNavbar.Brand>
-        <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
-        <BSNavbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
-            <Nav.Link href="/">Home</Nav.Link>
+    <AppBar position="sticky" sx={{ backgroundColor: '#1a1a1a' }}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters>
+          <Typography
+            variant="h6"
+            noWrap
+            component={Link}
+            to="/"
+            sx={{
+              mr: 2,
+              display: { xs: 'none', md: 'flex' },
+              fontWeight: 700,
+              letterSpacing: '.1rem',
+              color: 'inherit',
+              textDecoration: 'none',
+              flexGrow: 1
+            }}
+          >
+            Blogify
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button component={Link} to="/" color="inherit">
+              Home
+            </Button>
             {isAuthenticated && (
               <>
-              <Nav.Link href="/dashboard">Dashboard</Nav.Link>
-              <Nav.Link href="/categories-tags">Categories & Tags</Nav.Link>
+                <Button component={Link} to="/dashboard" color="inherit">
+                  Dashboard
+                </Button>
+                <Button component={Link} to="/categories-tags" color="inherit">
+                  Categories
+                </Button>
+                <Button component={Link} to="/analytics" color="inherit">
+                  Analytics
+                </Button>
               </>
             )}
-          </Nav>
-          <Nav>
+          </Box>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {isAuthenticated ? (
               <>
-                <Nav.Link>Welcome, {user?.name}</Nav.Link>
-                <Button variant="outline-light" size="sm" onClick={logout}>
+                <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
+                  Hi, {user?.name}
+                </Typography>
+                <Button
+                  component={Link}
+                  to={`/profile/${user?._id}`}
+                  color="inherit"
+                  variant="outlined"
+                  size="small"
+                >
+                  My Profile
+                </Button>
+                <Button
+                  onClick={handleLogout}
+                  color="error"
+                  variant="contained"
+                  size="small"
+                >
                   Logout
                 </Button>
               </>
             ) : (
               <>
-                <Nav.Link href="/login">Login</Nav.Link>
-                <Nav.Link href="/register">Register</Nav.Link>
+                <Button component={Link} to="/login" color="inherit">
+                  Login
+                </Button>
+                <Button component={Link} to="/register" variant="contained" color="primary">
+                  Register
+                </Button>
               </>
             )}
-          </Nav>
-        </BSNavbar.Collapse>
+          </Box>
+        </Toolbar>
       </Container>
-    </BSNavbar>
+    </AppBar>
   );
 };
 

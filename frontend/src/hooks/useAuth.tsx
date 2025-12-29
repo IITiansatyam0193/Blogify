@@ -1,31 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useContext } from 'react';
 import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 
 export const useAuth = () => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const context = useContext(AuthContext);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (savedToken) {
-      setToken(savedToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-      setUser(JSON.parse(savedUser!))
-    }
-    setLoading(false);
-  }, []);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  const { token, user, loading, isAuthenticated, loginState, logoutState } = context;
 
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post('/api/auth/login', { email, password });
       const { token: newToken, user: loginUser } = response.data.data;
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(loginUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      setToken(newToken);
-      setUser(loginUser);
+      loginState(newToken, loginUser);
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Login failed' };
@@ -33,13 +23,8 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setToken(null);
-    setUser(null);
+    logoutState();
   };
-
-  const isAuthenticated = !!token;
 
   return { token, user, loading, login, logout, isAuthenticated };
 };

@@ -8,7 +8,9 @@ exports.getUserProfile = async (req, res, next) => {
     const { userId } = req.params;
     const viewerId = req.user ? req.user.id : null;
 
-    const user = await User.findById(userId).select("name email friends");
+    const user = await User.findById(userId)
+      .select("name email friends incomingRequests")
+      .populate("friends", "name email");
     if (!user) {
       return res
         .status(404)
@@ -18,6 +20,24 @@ exports.getUserProfile = async (req, res, next) => {
     const isFriend =
       viewerId &&
       user.friends.some((fid) => String(fid) === String(viewerId));
+
+    let hasSentRequest = false;
+    let hasReceivedRequest = false;
+
+    if (viewerId && !isFriend) {
+      // Check if viewer has sent a request to this user
+      hasSentRequest = user.incomingRequests.some(
+        (r) => String(r.from) === String(viewerId) && r.status === "pending"
+      );
+
+      // Check if this user has sent a request to the viewer
+      const viewerUser = await User.findById(viewerId).select("incomingRequests");
+      if (viewerUser) {
+        hasReceivedRequest = viewerUser.incomingRequests.some(
+          (r) => String(r.from) === String(userId) && r.status === "pending"
+        );
+      }
+    }
 
     // public posts always visible, friends-only only if friends
     const visibilityFilter = ["public"];
@@ -33,11 +53,14 @@ exports.getUserProfile = async (req, res, next) => {
       success: true,
       data: {
         profile: {
-          id: user._id,
+          _id: user._id,
           name: user.name,
-          // email optional to expose
+          email: user.email,
+          friends: user.friends,
         },
         isFriend,
+        hasSentRequest,
+        hasReceivedRequest,
         publicPosts: posts, // includes friend-only if isFriend
       },
     });
@@ -106,16 +129,18 @@ exports.sendFriendRequest = async (req, res, next) => {
       });
     }
 
-    const existingOutgoing = fromUser.outgoingRequests.find(
-      (r) => String(r.from) === fromId && String(toUserId) // not strictly necessary
-    );
+    // Check if a request already exists in either direction
     const existingIncoming = toUser.incomingRequests.find(
       (r) => String(r.from) === fromId && r.status === "pending"
     );
-    if (existingOutgoing || existingIncoming) {
+    const existingOutgoing = fromUser.incomingRequests.find(
+      (r) => String(r.from) === toUserId && r.status === "pending"
+    );
+    
+    if (existingIncoming || existingOutgoing) {
       return res.status(400).json({
         success: false,
-        message: "Friend request already sent",
+        message: "A friend request is already pending between you",
       });
     }
 
@@ -239,6 +264,24 @@ exports.removeFriend = async (req, res, next) => {
     res.json({
       success: true,
       message: "Friend removed",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getPendingRequests = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).populate(
+      "incomingRequests.from",
+      "name email"
+    );
+
+    const pending = user.incomingRequests.filter((r) => r.status === "pending");
+
+    res.json({
+      success: true,
+      data: pending,
     });
   } catch (err) {
     next(err);

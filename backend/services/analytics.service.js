@@ -24,6 +24,9 @@ exports.trackView = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
+    // Also increment the Post model views
+    await Post.findByIdAndUpdate(postId, { $inc: { views: 1 } });
+
     res.json({ success: true, data: analytics });
   } catch (err) {
     next(err);
