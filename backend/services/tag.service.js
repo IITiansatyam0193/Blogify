@@ -136,9 +136,17 @@ exports.mergeTags = async (req, res, next) => {
       });
     }
 
+    // STEP 1: Add the target tag to all posts that have the source tag
+    // Use $addToSet to prevent duplicates if the post already has the target tag
     await Post.updateMany(
       { tags: sourceId },
-      { $addToSet: { tags: targetId }, $pull: { tags: sourceId } }
+      { $addToSet: { tags: targetId } }
+    );
+
+    // STEP 2: Remove the source tag from all posts
+    await Post.updateMany(
+      { tags: sourceId },
+      { $pull: { tags: sourceId } }
     );
 
     await Tag.findByIdAndDelete(sourceId);

@@ -18,6 +18,22 @@ export interface Post {
   }>;
   createdAt: string;
   updatedAt: string;
+  themeId?: Theme;
+}
+
+export interface Theme {
+  _id: string;
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+  };
+  fonts: {
+    heading: string;
+    body: string;
+  };
 }
 
 export interface User {
@@ -31,6 +47,7 @@ export interface AuthResponse {
   data: {
     user: User;
     token: string;
+    activeTheme?: Theme;
   };
 }
 

@@ -20,7 +20,7 @@ exports.createPost = async (req, res, next) => {
       });
     }
 
-    const { title, content, categories, tags, status, scheduledAt, visibility, coverImageUrl } = req.body;
+    const { title, content, categories, tags, status, scheduledAt, visibility, coverImageUrl, themeId } = req.body;
     const media = [];
 
     // Process uploaded files
@@ -45,6 +45,7 @@ exports.createPost = async (req, res, next) => {
       scheduledAt,
       visibility: visibility || "public",
       coverImageUrl,
+      themeId: themeId || null,
       media,
     });
 
@@ -83,6 +84,7 @@ exports.updatePost = async (req, res, next) => {
       scheduledAt,
       coverImageUrl,
       media,
+      themeId,
     } = req.body;
 
     const post = await Post.findById(postId);
@@ -122,6 +124,7 @@ exports.updatePost = async (req, res, next) => {
     if (media !== undefined) post.media = media;
     if (status !== undefined) post.status = status;
     if (scheduledAt !== undefined) post.scheduledAt = scheduledAt;
+    if (themeId !== undefined) post.themeId = themeId || null;
 
     if (post.status === "published" && !post.isPublishable()) {
       return res.status(400).json({
@@ -153,6 +156,7 @@ exports.getPosts = async (req, res, next) => {
     const [items, total] = await Promise.all([
       Post.find(filter)
         .populate("author", "name email")
+        .populate("themeId")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 }),
@@ -179,7 +183,9 @@ exports.getPostById = async (req, res, next) => {
     const id = req.params.id;
     const viewerId = req.user ? req.user.id : null;
 
-    const post = await Post.findById(id).populate("author", "name email friends");
+    const post = await Post.findById(id)
+      .populate("author", "name email friends")
+      .populate("themeId");
     if (!post || post.status !== "published") {
       return res.status(404).json({ success: false, message: "Post not found" });
     }
@@ -193,14 +199,25 @@ exports.getPostById = async (req, res, next) => {
     if (post.visibility === "private" && !isAuthor) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to view this blog",
+        message: "This post is restricted. You must be the author to view this content.",
+        authorId: author._id
       });
     }
     if (post.visibility === "friends" && !isAuthor && !isFriend) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to view this blog",
+        message: "This post is restricted. You must be a friend of the author to view this content.",
+        authorId: author._id
       });
+    }
+
+    // Populate theme fallback if missing
+    if (!post.themeId) {
+      const Theme = require("../models/theme.model");
+      const authorTheme = await Theme.findOne({ user: author._id, isActive: true });
+      if (authorTheme) {
+        post.themeId = authorTheme;
+      }
     }
 
     res.json({ success: true, data: post });
@@ -257,6 +274,7 @@ exports.searchPosts = async (req, res, next) => {
     const [items, total] = await Promise.all([
       Post.find(filter)
         .populate("author", "name email")
+        .populate("themeId")
         .skip(skip)
         .limit(limit)
         .sort(sort),

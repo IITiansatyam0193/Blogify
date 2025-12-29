@@ -9,13 +9,13 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
-  const { token, user, loading, isAuthenticated, loginState, logoutState } = context;
+  const { token, user, activeTheme, loading, isAuthenticated, loginState, logoutState, updateActiveTheme } = context;
 
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post('/api/auth/login', { email, password });
-      const { token: newToken, user: loginUser } = response.data.data;
-      loginState(newToken, loginUser);
+      const { token: newToken, user: loginUser, activeTheme: theme } = response.data.data;
+      loginState(newToken, loginUser, theme);
       return { success: true };
     } catch (error) {
       return { success: false, error: 'Login failed' };
@@ -26,5 +26,5 @@ export const useAuth = () => {
     logoutState();
   };
 
-  return { token, user, loading, login, logout, isAuthenticated };
+  return { token, user, activeTheme, loading, login, logout, isAuthenticated, updateActiveTheme };
 };

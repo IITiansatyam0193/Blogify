@@ -44,7 +44,7 @@ const MenuProps = {
 };
 
 const Dashboard: React.FC = () => {
-  const { isAuthenticated, token, loading: authLoading } = useAuth();
+  const { isAuthenticated, token, activeTheme, updateActiveTheme, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -110,8 +110,8 @@ const Dashboard: React.FC = () => {
   const fetchThemes = async () => {
     try {
       const res = await axios.get('/api/themes');
-      const themesData = Array.isArray(res.data) ? res.data : (Array.isArray(res.data.data) ? res.data.data : []);
-      setThemes(themesData);
+      // const themesData = Array.isArray(res.data) ? res.data : (Array.isArray(res.data.data) ? res.data.data : []);
+      setThemes(res.data.data.themes);
     } catch (err) {
       console.error('Failed to fetch themes:', err);
       setThemes([]);
@@ -157,6 +157,8 @@ const Dashboard: React.FC = () => {
     if (!selectedThemeId) return;
     try {
       await axios.patch(`/api/themes/${selectedThemeId}/activate`);
+      const theme = themes.find(t => t._id === selectedThemeId);
+      if (theme) updateActiveTheme(theme);
       setSuccessMsg('Theme activated globally for your blog!');
     } catch (err) {
       setErrorMsg('Failed to activate theme.');

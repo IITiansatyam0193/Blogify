@@ -57,8 +57,9 @@ const UserProfile: React.FC = () => {
       setError('');
       const response = await axios.get(`/api/friends/user/${id}/profile`);
       const data = response.data.data;
-      setProfile(data);
-      setPosts(data.posts || []);
+      console.log(data)
+      setProfile({...data, ...data.profile});
+      setPosts(data.publicPosts || []);
       setIsFriend(data.isFriend);
       setHasSentRequest(data.hasSentRequest);
       setHasReceivedRequest(data.hasReceivedRequest);
@@ -179,15 +180,15 @@ const UserProfile: React.FC = () => {
 
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
           <Tabs value={activeTab} onChange={(_, val) => setActiveTab(val)}>
-            <Tab icon={<PostsIcon />} iconPosition="start" label={`Posts (${posts.length})`} />
+            <Tab icon={<PostsIcon />} iconPosition="start" label={`Posts (${posts?.length})`} />
             <Tab icon={<FriendsIcon />} iconPosition="start" label={`Friends (${profile?.friends?.length || 0})`} />
           </Tabs>
         </Box>
 
         {activeTab === 0 && (
           <Grid container spacing={4}>
-            {posts.length > 0 ? (
-              posts.map((post) => (
+            {posts?.length > 0 ? (
+              posts?.map((post) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={post._id}>
                   <PostCard post={post} />
                 </Grid>

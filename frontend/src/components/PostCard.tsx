@@ -63,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.875rem' }}>
-            {post.author.name.charAt(0)}
+            {post.author.name?.charAt(0) ?? 'U'}
           </Avatar>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography

@@ -44,6 +44,7 @@ const postSchema = new Schema(
       },
     ],
     views: { type: Number, default: 0 },
+    themeId: { type: Schema.Types.ObjectId, ref: "Theme" },
     popularityScore: { type: Number, default: 0 },
   },
   { timestamps: true }

@@ -19,7 +19,7 @@ exports.getUserProfile = async (req, res, next) => {
 
     const isFriend =
       viewerId &&
-      user.friends.some((fid) => String(fid) === String(viewerId));
+      user.friends.some((fid) => String(fid._id) === String(viewerId));
 
     let hasSentRequest = false;
     let hasReceivedRequest = false;
@@ -47,7 +47,7 @@ exports.getUserProfile = async (req, res, next) => {
       author: userId,
       status: "published",
       visibility: { $in: visibilityFilter },
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 }).populate("author", "name email");
 
     res.json({
       success: true,

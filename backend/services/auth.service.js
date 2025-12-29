@@ -46,6 +46,9 @@ exports.register = async (req, res, next) => {
 
     const token = generateToken(user);
 
+    const Theme = require("../models/theme.model");
+    const activeTheme = await Theme.findOne({ user: user._id, isActive: true });
+
     res.status(201).json({
       success: true,
       message: "Registration successful",
@@ -56,6 +59,7 @@ exports.register = async (req, res, next) => {
           email: user.email,
         },
         token,
+        activeTheme,
       },
     });
   } catch (err) {
@@ -92,6 +96,9 @@ exports.login = async (req, res, next) => {
 
     const token = generateToken(user);
 
+    const Theme = require("../models/theme.model");
+    const activeTheme = await Theme.findOne({ user: user._id, isActive: true });
+
     res.json({
       success: true,
       message: "Login successful",
@@ -102,6 +109,7 @@ exports.login = async (req, res, next) => {
           email: user.email,
         },
         token,
+        activeTheme,
       },
     });
   } catch (err) {
